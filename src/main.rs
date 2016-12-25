@@ -12,7 +12,7 @@ extern crate serde_json;
 
 use rocket_contrib::Template;
 use std::process::Command;
-use std::io::{BufWriter, BufReader};
+use std::io::{BufWriter, BufReader, Error};
 use std::io::prelude::*;
 use std::fs::{OpenOptions, File};
 use std::time::Duration;
@@ -86,6 +86,7 @@ fn start_logging_loop() -> thread::JoinHandle<()> {
 fn read_file() -> Vec<TemperatureData> {
     let f = File::open(LOG_FILE_PATH).expect("Unable to open log file");
     let f = BufReader::new(f);
+    // TODO: should get last lines
     let result = f.lines().take(24 * 6).map(|line| {
         let line = line.unwrap();
         serde_json::from_str(&line).unwrap()
@@ -102,7 +103,15 @@ fn index() -> Template {
     Template::render("index", &payload)
 }
 
+#[get("/public/<fname>")]
+fn public(fname: &str) -> Result<File, Error> {
+    File::open(format!("public/{}", fname))
+}
+
 fn main() {
     let _ = start_logging_loop();
-    rocket::ignite().mount("/", routes![index]).launch()
+    rocket::ignite()
+        .mount("/", routes![index])
+        .mount("/", routes![public])
+        .launch()
 }
