@@ -20,25 +20,28 @@ use std::thread;
 
 static LOG_FILE_PATH: &'static str = "/tmp/temperature.log";
 
-#[derive(Serialize)]
-struct TemplateContext { }
+#[derive(Serialize, Deserialize, Debug)]
+struct Payload {
+    payload: Vec<TemperatureData>
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 struct TemperatureData {
     humidity: f64,
     temperature: f64,
-    seconds: i64,
+    nseconds: i64,
 }
 
 fn parse_data(input: String) -> TemperatureData {
     info!("Trying to parse input {}", input);
-    let now = time::get_time().sec;
+    let tnow = time::get_time();
+    let now = tnow.sec * 1000;
     let values: Vec<f64> = input.trim().split(",").map(|x| x.parse().unwrap()).collect();
 
     TemperatureData {
         temperature: values[0],
         humidity: values[1],
-        seconds: now
+        nseconds: now
     }
 }
 
@@ -83,7 +86,7 @@ fn start_logging_loop() -> thread::JoinHandle<()> {
 fn read_file() -> Vec<TemperatureData> {
     let f = File::open(LOG_FILE_PATH).expect("Unable to open log file");
     let f = BufReader::new(f);
-    let result = f.lines().map(|line| {
+    let result = f.lines().take(24 * 6).map(|line| {
         let line = line.unwrap();
         serde_json::from_str(&line).unwrap()
     }).collect();
@@ -93,13 +96,10 @@ fn read_file() -> Vec<TemperatureData> {
 
 #[get("/")]
 fn index() -> Template {
-    let context = TemplateContext { };
-
     let data = read_file();
+    let payload = Payload { payload: data };
 
-    println!("{:?}", data);
-
-    Template::render("index", &context)
+    Template::render("index", &payload)
 }
 
 fn main() {
