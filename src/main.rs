@@ -8,6 +8,7 @@ extern crate time;
 extern crate log;
 #[macro_use]
 extern crate serde_derive;
+extern crate serde_json;
 
 use rocket_contrib::Template;
 use std::process::Command;
@@ -20,11 +21,28 @@ use std::thread;
 static LOG_FILE_PATH: &'static str = "/tmp/temperature.log";
 
 #[derive(Serialize)]
-struct TemplateContext {
-    contents: String,
+struct TemplateContext { }
+
+#[derive(Serialize, Deserialize, Debug)]
+struct TemperatureData {
+    humidity: f64,
+    temperature: f64,
+    seconds: i64,
 }
 
-fn run_command() -> String {
+fn parse_data(input: String) -> TemperatureData {
+    info!("Trying to parse input {}", input);
+    let now = time::get_time().sec;
+    let values: Vec<f64> = input.trim().split(",").map(|x| x.parse().unwrap()).collect();
+
+    TemperatureData {
+        temperature: values[0],
+        humidity: values[1],
+        seconds: now
+    }
+}
+
+fn run_command() -> TemperatureData {
     let output = Command::new("/home/gnzh/bin/temperature-test.sh")
         .output()
         .expect("Failed to read temperature");
@@ -36,10 +54,10 @@ fn run_command() -> String {
     info!("stdout: {}", stdout);
     info!("stderr: {}", stderr);
 
-    stdout.to_string()
+    parse_data(stdout.to_string())
 }
 
-fn log_to_file(input: &String) {
+fn log_to_file(input: &TemperatureData) {
     let f = OpenOptions::new()
         .write(true)
         .append(true)
@@ -47,9 +65,8 @@ fn log_to_file(input: &String) {
         .open(LOG_FILE_PATH)
         .expect("Unable to open log file");
     let mut f = BufWriter::new(f);
-    let now = time::get_time().sec;
-
-    f.write_fmt(format_args!("{},{}", now, input)).expect("Unable to write to log file");
+    let input_string = serde_json::to_string(&input).unwrap();
+    f.write_fmt(format_args!("{}\n", input_string)).expect("Unable to write to log file");
 }
 
 fn start_logging_loop() -> thread::JoinHandle<()> {
@@ -63,19 +80,24 @@ fn start_logging_loop() -> thread::JoinHandle<()> {
     })
 }
 
-fn read_file() -> String {
+fn read_file() -> Vec<TemperatureData> {
     let f = File::open(LOG_FILE_PATH).expect("Unable to open log file");
-    let mut f = BufReader::new(f);
-    let mut output = String::new();
+    let f = BufReader::new(f);
+    let result = f.lines().map(|line| {
+        let line = line.unwrap();
+        serde_json::from_str(&line).unwrap()
+    }).collect();
 
-    f.read_to_string(&mut output).expect("Unable to read log file");
-
-    output
+    result
 }
 
 #[get("/")]
 fn index() -> Template {
-    let context = TemplateContext { contents: read_file() };
+    let context = TemplateContext { };
+
+    let data = read_file();
+
+    println!("{:?}", data);
 
     Template::render("index", &context)
 }
