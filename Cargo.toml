@@ -1,0 +1,18 @@
+[package]
+name = "rust-temperature-service"
+version = "0.1.0"
+authors = ["Max Gonzih <gonzih@gmail.com>"]
+
+[dependencies]
+rocket = "0.1.2"
+rocket_codegen = "0.1.2"
+log = "0.3.6"
+time = "0.1"
+serde = "*"
+serde_derive = "*"
+serde_json = "*"
+
+[dependencies.rocket_contrib]
+version = "0.1.2"
+default-features = false
+features = ["handlebars_templates"]
