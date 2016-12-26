@@ -35,7 +35,7 @@ struct TemperatureData {
 }
 
 fn parse_data(input: String) -> TemperatureData {
-    info!("Trying to parse input {}", input);
+    info!("Trying to parse input {}\n", input.to_string().trim());
     let tnow = time::get_time();
     let now = tnow.sec * 1000;
     let values: Vec<f64> = input.trim().split(",").map(|x| x.parse().unwrap()).collect();
@@ -53,9 +53,9 @@ fn run_command() -> Result<TemperatureData, Error> {
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
 
-    info!("status: {}", output.status);
-    info!("stdout: {}", stdout);
-    info!("stderr: {}", stderr);
+    info!("Status: {}", output.status);
+    info!("Stdout: {}", stdout.to_string().trim());
+    info!("Stderr: {}", stderr.to_string().trim());
 
     Ok(parse_data(stdout.to_string()))
 }
@@ -80,7 +80,7 @@ fn start_logging_loop() -> thread::JoinHandle<()> {
                 Ok(v) => log_to_file(&v),
                 Err(e) => error!("Error while running command: {}", e),
             }
-            let ten_minutes = Duration::from_secs(10 * 60);
+            let ten_minutes = Duration::from_secs(1);
             thread::sleep(ten_minutes);
         }
     })
