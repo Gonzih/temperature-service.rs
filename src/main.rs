@@ -18,8 +18,8 @@ use std::fs::{OpenOptions, File};
 use std::time::Duration;
 use std::thread;
 
-static LOG_FILE_PATH: &'static str = "/tmp/temperature.log";
-static COMMAND_PATH: &'static str = "/home/gnzh/bin/temperature-test.sh";
+const LOG_FILE_PATH: &'static str = "/tmp/temperature.log";
+const COMMAND_PATH: &'static str = "/home/gnzh/bin/temperature-test.sh";
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Payload {
