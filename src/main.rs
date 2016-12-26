@@ -22,7 +22,8 @@ static LOG_FILE_PATH: &'static str = "/tmp/temperature.log";
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Payload {
-    payload: Vec<TemperatureData>
+    payload: Vec<TemperatureData>,
+    last: TemperatureData
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -106,10 +107,19 @@ fn read_file() -> Vec<TemperatureData> {
     result
 }
 
+fn read_last_item() -> TemperatureData {
+    let f = open_file();
+    let last = f.lines().last().unwrap().expect("Can't read last line");
+    let result = serde_json::from_str(&last).unwrap();
+
+    result
+}
+
 #[get("/")]
 fn index() -> Template {
     let data = read_file();
-    let payload = Payload { payload: data };
+    let last = read_last_item();
+    let payload = Payload { payload: data, last: last };
 
     Template::render("index", &payload)
 }
