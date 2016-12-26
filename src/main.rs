@@ -35,7 +35,7 @@ struct TemperatureData {
 }
 
 fn parse_data(input: String) -> TemperatureData {
-    info!("Trying to parse input {}\n", input.to_string().trim());
+    info!("Trying to parse input {}\n", input.trim());
     let tnow = time::get_time();
     let now = tnow.sec * 1000;
     let values: Vec<f64> = input.trim().split(",").map(|x| x.parse().unwrap()).collect();
@@ -48,14 +48,15 @@ fn parse_data(input: String) -> TemperatureData {
 }
 
 fn run_command() -> Result<TemperatureData, Error> {
-    let output = try!(Command::new(COMMAND_PATH).output());
+    info("Executing command {}", COMMAND_PATH);
 
+    let output = try!(Command::new(COMMAND_PATH).output());
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
 
     info!("Status: {}", output.status);
-    info!("Stdout: {}", stdout.to_string().trim());
-    info!("Stderr: {}", stderr.to_string().trim());
+    info!("Stdout: {}", stdout.trim());
+    info!("Stderr: {}", stderr.trim());
 
     Ok(parse_data(stdout.to_string()))
 }
