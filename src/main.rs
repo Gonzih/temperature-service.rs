@@ -110,7 +110,7 @@ fn read_file() -> Vec<TemperatureData> {
 #[get("/")]
 fn index() -> Template {
     let data = read_file();
-    let last = read_file().last().unwrap().clone();
+    let last = data.last().unwrap().clone();
     let payload = Payload {
         payload: data,
         last: last,
