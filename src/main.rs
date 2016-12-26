@@ -118,8 +118,8 @@ fn index() -> Template {
 }
 
 #[get("/public/<folder>/<fname>")]
-fn public(folder: &str, fname: &str) -> Result<File, Error> {
-    File::open(format!("public/{}/{}", folder, fname))
+fn public(folder: &str, fname: &str) -> Option<File> {
+    File::open(format!("public/{}/{}", folder, fname)).ok()
 }
 
 fn main() {
