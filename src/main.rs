@@ -48,7 +48,7 @@ fn parse_data(input: String) -> TemperatureData {
 }
 
 fn run_command() -> Result<TemperatureData, Error> {
-    info("Executing command {}", COMMAND_PATH);
+    info!("Executing command {}", COMMAND_PATH);
 
     let output = try!(Command::new(COMMAND_PATH).output());
     let stdout = String::from_utf8_lossy(&output.stdout);
