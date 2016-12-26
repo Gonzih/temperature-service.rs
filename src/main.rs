@@ -83,11 +83,22 @@ fn start_logging_loop() -> thread::JoinHandle<()> {
     })
 }
 
-fn read_file() -> Vec<TemperatureData> {
+fn open_file() -> BufReader<File> {
     let f = File::open(LOG_FILE_PATH).expect("Unable to open log file");
-    let f = BufReader::new(f);
-    // TODO: should get last lines
-    let result = f.lines().take(24 * 6).map(|line| {
+    BufReader::new(f)
+}
+
+fn read_file() -> Vec<TemperatureData> {
+    let f = open_file();
+    let len = f.lines().count();
+    let f = open_file();
+    let num: usize = 24 * 6;
+    let to_skip = if len > num {
+        len - num
+    } else {
+        0
+    };
+    let result = f.lines().skip(to_skip).map(|line| {
         let line = line.unwrap();
         serde_json::from_str(&line).unwrap()
     }).collect();
