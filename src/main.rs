@@ -80,7 +80,7 @@ fn start_logging_loop() -> thread::JoinHandle<()> {
                 Ok(v) => log_to_file(&v),
                 Err(e) => error!("Error while running command: {}", e),
             }
-            let ten_minutes = Duration::from_secs(1);
+            let ten_minutes = Duration::from_secs(10 * 60);
             thread::sleep(ten_minutes);
         }
     })
