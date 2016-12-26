@@ -124,10 +124,17 @@ fn public(folder: &str, fname: &str) -> Option<File> {
     File::open(format!("public/{}/{}", folder, fname)).ok()
 }
 
+#[get("/raw.txt")]
+fn raw() -> String {
+    let last = read_file().last().unwrap().clone();
+    format!("T = {}*C, H = {}%", last.temperature, last.humidity)
+}
+
 fn main() {
     let _ = start_logging_loop();
     rocket::ignite()
         .mount("/", routes![index])
         .mount("/", routes![public])
+        .mount("/", routes![raw])
         .launch()
 }
