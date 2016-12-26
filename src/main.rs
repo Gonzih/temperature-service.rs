@@ -23,7 +23,7 @@ static LOG_FILE_PATH: &'static str = "/tmp/temperature.log";
 #[derive(Serialize, Deserialize, Debug)]
 struct Payload {
     payload: Vec<TemperatureData>,
-    last: TemperatureData
+    last: TemperatureData,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
@@ -42,7 +42,7 @@ fn parse_data(input: String) -> TemperatureData {
     TemperatureData {
         temperature: values[0],
         humidity: values[1],
-        nseconds: now
+        nseconds: now,
     }
 }
 
@@ -90,19 +90,17 @@ fn open_file() -> BufReader<File> {
 }
 
 fn read_file() -> Vec<TemperatureData> {
-    let f = open_file();
-    let len = f.lines().count();
+    let len = open_file().lines().count();
     let f = open_file();
     let num: usize = 24 * 6;
-    let to_skip = if len > num {
-        len - num
-    } else {
-        0
-    };
-    let result = f.lines().skip(to_skip).map(|line| {
-        let line = line.unwrap();
-        serde_json::from_str(&line).unwrap()
-    }).collect();
+    let to_skip = if len > num { len - num } else { 0 };
+    let result = f.lines()
+        .skip(to_skip)
+        .map(|line| {
+            let line = line.unwrap();
+            serde_json::from_str(&line).unwrap()
+        })
+        .collect();
 
     result
 }
@@ -111,7 +109,10 @@ fn read_file() -> Vec<TemperatureData> {
 fn index() -> Template {
     let data = read_file();
     let last = read_file().last().unwrap().clone();
-    let payload = Payload { payload: data, last: last };
+    let payload = Payload {
+        payload: data,
+        last: last,
+    };
 
     Template::render("index", &payload)
 }
