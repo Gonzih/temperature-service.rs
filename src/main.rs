@@ -103,9 +103,9 @@ fn index() -> Template {
     Template::render("index", &payload)
 }
 
-#[get("/public/<fname>")]
-fn public(fname: &str) -> Result<File, Error> {
-    File::open(format!("public/{}", fname))
+#[get("/public/<folder>/<fname>")]
+fn public(folder: &str, fname: &str) -> Result<File, Error> {
+    File::open(format!("public/{}/{}", folder, fname))
 }
 
 fn main() {
