@@ -26,7 +26,7 @@ struct Payload {
     last: TemperatureData
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 struct TemperatureData {
     humidity: f64,
     temperature: f64,
@@ -107,18 +107,10 @@ fn read_file() -> Vec<TemperatureData> {
     result
 }
 
-fn read_last_item() -> TemperatureData {
-    let f = open_file();
-    let last = f.lines().last().unwrap().expect("Can't read last line");
-    let result = serde_json::from_str(&last).unwrap();
-
-    result
-}
-
 #[get("/")]
 fn index() -> Template {
     let data = read_file();
-    let last = read_last_item();
+    let last = read_file().last().unwrap().clone();
     let payload = Payload { payload: data, last: last };
 
     Template::render("index", &payload)
