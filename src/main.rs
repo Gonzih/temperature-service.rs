@@ -19,6 +19,7 @@ use std::time::Duration;
 use std::thread;
 
 static LOG_FILE_PATH: &'static str = "/tmp/temperature.log";
+static COMMAND_PATH: &'static str = "/home/gnzh/bin/temperature-test.sh";
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Payload {
@@ -46,10 +47,8 @@ fn parse_data(input: String) -> TemperatureData {
     }
 }
 
-fn run_command() -> TemperatureData {
-    let output = Command::new("/home/gnzh/bin/temperature-test.sh")
-        .output()
-        .expect("Failed to read temperature");
+fn run_command() -> Result<TemperatureData, Error> {
+    let output = try!(Command::new(COMMAND_PATH).output());
 
     let stdout = String::from_utf8_lossy(&output.stdout);
     let stderr = String::from_utf8_lossy(&output.stderr);
@@ -58,7 +57,7 @@ fn run_command() -> TemperatureData {
     info!("stdout: {}", stdout);
     info!("stderr: {}", stderr);
 
-    parse_data(stdout.to_string())
+    Ok(parse_data(stdout.to_string()))
 }
 
 fn log_to_file(input: &TemperatureData) {
@@ -77,7 +76,10 @@ fn start_logging_loop() -> thread::JoinHandle<()> {
     thread::spawn(move || {
         loop {
             let output = run_command();
-            log_to_file(&output);
+            match output {
+                Ok(v) => log_to_file(&v),
+                Err(e) => error!("Error while running command: {}", e),
+            }
             let ten_minutes = Duration::from_secs(10 * 60);
             thread::sleep(ten_minutes);
         }
